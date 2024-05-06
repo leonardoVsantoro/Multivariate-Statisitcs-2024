@@ -43,7 +43,17 @@ plt.legend(); plt.show()
 
 from sklearn.neighbors import NearestCentroid
 from sklearn.model_selection import train_test_split
-for _ in range(10):
-    X_train, X_test, y_train, y_test = train_test_split(  X, y, test_size=0.01)
+
+n_splits = 100
+test_size = .1
+
+for _ in range(n_splits):
+    X_train, X_test, y_train, y_test = train_test_split(  X, y, test_size=test_size)
     clf = NearestCentroid(); clf.fit(X_train,y_train)
-    print(( (np.sum(clf.predict(X_test)==y_test))/y_test.size).round(3))
+    validated_errors.append(( (np.sum(clf.predict(X_test)==y_test))/y_test.size).round(3))
+
+fig,ax = plt.subplots(figsize = (6,2))
+sns.boxplot(x = validated_errors)
+fig.suptitle('Cross-validated error',y=1.1)
+ax.set_title('{} random {}/{} train/test splits'.format(n_splits,1-test_size,test_size ))
+plt.show()

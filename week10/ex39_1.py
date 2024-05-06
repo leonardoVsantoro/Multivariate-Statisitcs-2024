@@ -1,10 +1,9 @@
 import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-import sklearn
 import seaborn as sns
-import pandas as pd
 from sklearn.preprocessing import StandardScaler
+from sklearn.datasets import load_breast_cancer
+
 
 def pca(X, n_components):
     X_centered = X - X.mean(axis=0)
@@ -16,7 +15,7 @@ def pca(X, n_components):
     pcs = X_centered.dot(W); pc = W.T
     return pcs, pc
 
-data = sklearn.datasets.load_breast_cancer()
+data = load_breast_cancer()
 # X = StandardScaler().fit_transform(data.data) 
 X = data.data; X = X/X.std(0)
 y = data.target
@@ -39,6 +38,7 @@ ax.fill_between(np.arange(X.shape[1]), X.mean(0)- lam*pc[1], X.mean(0)+ lam*pc[1
 ax.set_xticks(np.arange(data.feature_names.size))
 ax.set_xticklabels(data.feature_names, rotation = 45 )
 plt.show()
+
 fig,ax = plt.subplots(figsize = (6,2))
 ax.set_title('% Explained Variance')
 ax.set_xticks(np.arange(n_components)); ax.set_xticklabels(1+np.arange(n_components))
@@ -48,7 +48,17 @@ ax.plot(100*pcs.std(0).cumsum()/pcs.std(0).sum()); plt.show()
 
 from sklearn.neighbors import NearestCentroid
 from sklearn.model_selection import train_test_split
-for _ in range(10):
-    X_train, X_test, y_train, y_test = train_test_split(  X, y, test_size=0.1)
+validated_errors = []
+
+n_splits = 100
+test_size = .1
+for _ in range(n_splits):
+    X_train, X_test, y_train, y_test = train_test_split(  X, y, test_size=test_size)
     clf = NearestCentroid(); clf.fit(X_train,y_train)
-    print((1-(clf.predict(X_test)  - y_test)**2).mean().round(3))
+    validated_errors.append((1-(clf.predict(X_test)  - y_test)**2).mean())
+
+fig,ax = plt.subplots(figsize = (6,2))
+sns.boxplot(x = validated_errors)
+fig.suptitle('Cross-validated error',y=1.1)
+ax.set_title('{} random {}/{} train/test splits'.format(n_splits,1-test_size,test_size ))
+plt.show()
